@@ -1,0 +1,17 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+    <application android:label="Aliunde TTS Helper" android:theme="@android:style/Theme.NoDisplay">
+        <receiver
+            android:name=".TtsReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.aliunde.tts.SPEAK" />
+                <action android:name="com.aliunde.tts.STOP" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
