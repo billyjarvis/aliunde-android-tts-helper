@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(aliunde_android_tts LANGUAGES CXX)
+add_library(aliunde.android.tts SHARED aliunde.android.tts.cpp)
+target_compile_features(aliunde.android.tts PRIVATE cxx_std_17)
+target_link_libraries(aliunde.android.tts PRIVATE dl)
+set_target_properties(aliunde.android.tts PROPERTIES OUTPUT_NAME "aliunde.android.tts")
