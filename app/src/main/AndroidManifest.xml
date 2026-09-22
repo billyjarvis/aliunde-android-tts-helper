@@ -4,14 +4,19 @@
             <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>
     </queries>
-    <application android:label="Aliunde TTS Helper" android:theme="@android:style/Theme.NoDisplay">
+    <application android:label="Aliunde TTS Helper" android:theme="@android:style/Theme.Material.NoActionBar">
         <receiver
             android:name=".TtsReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.aliunde.tts.SPEAK" />
                 <action android:name="com.aliunde.tts.STOP" />
+                <action android:name="com.aliunde.tts.CHOOSE_VOICE" />
             </intent-filter>
         </receiver>
+        <activity
+            android:name=".VoiceChooserActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
     </application>
 </manifest>
