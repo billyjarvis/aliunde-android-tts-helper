@@ -19,7 +19,12 @@
         </receiver>
         <activity
             android:name=".VoiceChooserActivity"
-            android:exported="false"
-            android:theme="@android:style/Theme.Material.NoActionBar" />
+            android:exported="true"
+            android:theme="@android:style/Theme.Material.NoActionBar">
+            <intent-filter>
+                <action android:name="com.aliunde.tts.CHOOSE_VOICE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>
