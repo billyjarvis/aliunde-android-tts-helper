@@ -9,6 +9,9 @@ on:
       - 'native/**'
       - '.github/workflows/build.native.yml'
 
+permissions:
+  contents: write
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -16,27 +19,38 @@ jobs:
       matrix:
         include:
           - abi: armeabi-v7a
-            artifact: Aliunde.Android.TTS.Native.armv7
+            output: armv7
           - abi: arm64-v8a
-            artifact: Aliunde.Android.TTS.Native.arm64
+            output: arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Install Android NDK
         run: |
           yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
           "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "ndk;27.2.12479018"
-
       - name: Configure
         run: cmake -S native -B "native/build-${{ matrix.abi }}" -DCMAKE_TOOLCHAIN_FILE="$ANDROID_SDK_ROOT/ndk/27.2.12479018/build/cmake/android.toolchain.cmake" -DANDROID_ABI="${{ matrix.abi }}" -DANDROID_PLATFORM=android-21 -DCMAKE_BUILD_TYPE=Release
-
       - name: Build
         run: cmake --build "native/build-${{ matrix.abi }}" --config Release
-
+      - name: Stage native bridge
+        run: |
+          mkdir -p "prebuilt/${{ matrix.output }}"
+          cp "native/build-${{ matrix.abi }}/libaliunde.android.tts.so" "prebuilt/${{ matrix.output }}/libaliunde.android.tts.so"
       - name: Upload native bridge
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
-          path: native/build-${{ matrix.abi }}/libaliunde.android.tts.so
+          name: Aliunde.Android.TTS.Native.${{ matrix.output }}
+          path: prebuilt/${{ matrix.output }}/libaliunde.android.tts.so
           if-no-files-found: error
+      - name: Save prebuilt bridge in repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "prebuilt/${{ matrix.output }}/libaliunde.android.tts.so"
+          git commit -m "Update prebuilt Android TTS ${{ matrix.output }}" || exit 0
+          for attempt in 1 2 3 4; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep 3
+          done
+          exit 1
