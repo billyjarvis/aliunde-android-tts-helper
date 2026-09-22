@@ -12,10 +12,13 @@ static std::string g_voice_list;
 
 static JNIEnv* env_for_thread() {
     if (!g_vm) {
-        void* h=dlopen("libart.so",RTLD_NOW);
-        if (!h) return nullptr;
         using Fn=jint(*)(JavaVM**,jsize,jsize*);
-        auto fn=(Fn)dlsym(h,"JNI_GetCreatedJavaVMs");
+        auto fn=(Fn)dlsym(RTLD_DEFAULT,"JNI_GetCreatedJavaVMs");
+        void* h=nullptr;
+        if (!fn) {
+            h=dlopen("libart.so",RTLD_NOW | RTLD_LOCAL);
+            if (h) fn=(Fn)dlsym(h,"JNI_GetCreatedJavaVMs");
+        }
         if (!fn) return nullptr;
         JavaVM* vm=nullptr; jsize n=0;
         if (fn(&vm,1,&n)!=JNI_OK || n<1) return nullptr;
