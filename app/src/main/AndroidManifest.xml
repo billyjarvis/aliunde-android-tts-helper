@@ -5,6 +5,9 @@
         </intent>
     </queries>
     <application android:label="Aliunde TTS Helper" android:theme="@android:style/Theme.Material.NoActionBar">
+        <service
+            android:name=".AliundeTtsService"
+            android:exported="false" />
         <receiver
             android:name=".TtsReceiver"
             android:exported="true">
