@@ -43,6 +43,14 @@ jobs:
           name: Aliunde.Android.TTS.Native.${{ matrix.output }}
           path: prebuilt/${{ matrix.output }}/libaliunde.android.tts.so
           if-no-files-found: error
+      - name: Record artifact id
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sleep 3
+          ID=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" --jq '.artifacts[] | select(.name=="Aliunde.Android.TTS.Native.${{ matrix.output }}") | .id' | head -1)
+          mkdir -p prebuilt
+          echo "$ID" > "prebuilt/${{ matrix.output }}.artifact.id"
       - name: Save prebuilt bridge in repository
         run: |
           git config user.name "github-actions[bot]"
