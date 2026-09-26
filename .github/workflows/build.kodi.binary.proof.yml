@@ -9,9 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: android-actions/setup-android@v3
       - name: Install NDK r27c
-        run: sdkmanager "ndk;27.2.12479018"
+        run: |
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "ndk;27.2.12479018"
       - name: Fetch exact Kodi 21.3 headers
         run: |
           git clone --filter=blob:none --no-checkout https://github.com/xbmc/xbmc.git kodi
