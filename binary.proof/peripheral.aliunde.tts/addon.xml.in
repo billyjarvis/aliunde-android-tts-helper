@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="peripheral.aliunde.tts" version="1.0.0" name="Aliunde Android TTS Bridge Proof" provider-name="Aliunde">
+  <requires>@ADDON_DEPENDS@</requires>
+  <extension point="kodi.peripheral" provides_joysticks="false" provides_buttonmaps="false" library_android="@LIBRARY_FILENAME@"/>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">Aliunde Android TTS bridge proof</summary>
+    <description lang="en_GB">Proves Kodi binary loading and Kodi supplied Android JNI access.</description>
+    <platform>android</platform>
+  </extension>
+</addon>
