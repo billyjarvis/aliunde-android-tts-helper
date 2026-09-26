@@ -1,0 +1,60 @@
+name: Kodi 21.3 ARMv7 binary proof
+on:
+  workflow_dispatch:
+  push:
+    branches: [kodi-binary-proof]
+    paths: ['binary.proof/**', '.github/workflows/build.kodi.binary.proof.yml']
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: android-actions/setup-android@v3
+      - name: Install NDK r27c
+        run: sdkmanager "ndk;27.2.12479018"
+      - name: Fetch exact Kodi 21.3 headers
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/xbmc/xbmc.git kodi
+          cd kodi
+          git checkout a3a448d26b8d560a65655dab2cd122994dc4e146 -- xbmc/addons/kodi-dev-kit/include
+      - name: Compile ARMv7 shared library
+        run: |
+          NDK="$ANDROID_SDK_ROOT/ndk/27.2.12479018"
+          CXX="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang++"
+          mkdir -p package/peripheral.aliunde.tts
+          "$CXX" -std=c++17 -DANDROID -fPIC -shared \
+            -I"$GITHUB_WORKSPACE/kodi/xbmc/addons/kodi-dev-kit/include" \
+            binary.proof/src/addon.cpp \
+            -o package/peripheral.aliunde.tts/peripheral.aliunde.tts.so
+      - name: Validate ELF
+        run: |
+          file package/peripheral.aliunde.tts/peripheral.aliunde.tts.so
+          readelf -h package/peripheral.aliunde.tts/peripheral.aliunde.tts.so
+          readelf -Ws package/peripheral.aliunde.tts/peripheral.aliunde.tts.so | grep ADDON
+      - name: Create addon.xml
+        run: |
+          cat > package/peripheral.aliunde.tts/addon.xml <<'XML'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <addon id="peripheral.aliunde.tts" version="1.0.0" name="Aliunde Android TTS Bridge Proof" provider-name="Aliunde">
+            <requires>
+              <import addon="kodi.binary.instance.peripheral" version="3.0.0"/>
+            </requires>
+            <extension point="kodi.peripheral" provides_joysticks="false" provides_buttonmaps="false" library_android="peripheral.aliunde.tts.so"/>
+            <extension point="xbmc.addon.metadata">
+              <summary lang="en_GB">Aliunde Android TTS bridge proof</summary>
+              <description lang="en_GB">Proves Kodi binary loading and Kodi supplied Android JNI access.</description>
+              <platform>android</platform>
+            </extension>
+          </addon>
+          XML
+      - name: Package
+        run: |
+          cd package
+          zip -9 -r ../peripheral.aliunde.tts-1.0.0-android-armv7.zip peripheral.aliunde.tts
+          cd ..
+          sha256sum peripheral.aliunde.tts-1.0.0-android-armv7.zip
+          unzip -t peripheral.aliunde.tts-1.0.0-android-armv7.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: peripheral.aliunde.tts-1.0.0-android-armv7
+          path: peripheral.aliunde.tts-1.0.0-android-armv7.zip
