@@ -10,25 +10,18 @@ static jobject g_tts=nullptr;
 static std::mutex g_lock;
 static std::string g_voice_list;
 
-static JNIEnv* sdl_env() {
-    using Fn=void*(*)();
-    auto fn=(Fn)dlsym(RTLD_DEFAULT,"SDL_AndroidGetJNIEnv");
-    if (!fn) fn=(Fn)dlsym(RTLD_DEFAULT,"SDL_GetAndroidJNIEnv");
-    return fn ? static_cast<JNIEnv*>(fn()) : nullptr;
-}
-
-static jobject sdl_activity() {
-    using Fn=void*(*)();
-    auto fn=(Fn)dlsym(RTLD_DEFAULT,"SDL_AndroidGetActivity");
-    if (!fn) fn=(Fn)dlsym(RTLD_DEFAULT,"SDL_GetAndroidActivity");
-    return fn ? static_cast<jobject>(fn()) : nullptr;
+static JNIEnv* kodi_env() {
+    using Fn=JNIEnv*(*)();
+    auto fn=(Fn)dlsym(RTLD_DEFAULT,"xbmc_jnienv");
+    if (!fn) fn=(Fn)dlsym(RTLD_DEFAULT,"_Z11xbmc_jnienvv");
+    return fn ? fn() : nullptr;
 }
 
 static JNIEnv* env_for_thread() {
-    JNIEnv* se=sdl_env();
-    if (se) {
-        if (!g_vm) se->GetJavaVM(&g_vm);
-        return se;
+    JNIEnv* ke=kodi_env();
+    if (ke) {
+        if (!g_vm) ke->GetJavaVM(&g_vm);
+        return ke;
     }
     if (!g_vm) {
         using Fn=jint(*)(JavaVM**,jsize,jsize*);
@@ -52,20 +45,6 @@ static JNIEnv* env_for_thread() {
 }
 
 static jobject application_context(JNIEnv* e) {
-    jobject activity=sdl_activity();
-    if (activity) {
-        jclass ac=e->GetObjectClass(activity);
-        if (ac) {
-            jmethodID gm=e->GetMethodID(ac,"getApplicationContext","()Landroid/content/Context;");
-            if (gm) {
-                jobject ctx=e->CallObjectMethod(activity,gm);
-                if (!e->ExceptionCheck() && ctx) { e->DeleteLocalRef(ac); e->DeleteLocalRef(activity); return ctx; }
-                e->ExceptionClear();
-            }
-            e->DeleteLocalRef(ac);
-        } else e->ExceptionClear();
-        e->DeleteLocalRef(activity);
-    }
     jclass at=e->FindClass("android/app/ActivityThread");
     if (at) {
         jmethodID mid=e->GetStaticMethodID(at,"currentApplication","()Landroid/app/Application;");
